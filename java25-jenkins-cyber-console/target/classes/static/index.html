@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYS//CONSOLE — Java 25 CI/CD Node</title>
+    <style>
+        :root {
+            --bg: #07090e;
+            --panel: #0d111a;
+            --border: #1e293b;
+            --neon: #00f5d4;
+            --amber: #ffb703;
+            --text: #e2e8f0;
+            --muted: #64748b;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background-color: var(--bg);
+            background-image:
+                linear-gradient(rgba(0, 245, 212, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 245, 212, 0.03) 1px, transparent 1px);
+            background-size: 28px 28px;
+            color: var(--text);
+            font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .terminal {
+            width: 100%;
+            max-width: 760px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            box-shadow: 0 0 0 1px rgba(0, 245, 212, 0.15), 0 24px 48px rgba(0, 0, 0, 0.7);
+        }
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1.25rem;
+            background: #090c13;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+        }
+        .status-pill {
+            color: var(--neon);
+            font-weight: 700;
+        }
+        .content {
+            padding: 1.75rem;
+        }
+        h1 {
+            margin: 0 0 0.4rem 0;
+            font-size: 1.5rem;
+            letter-spacing: 0.04em;
+            color: #ffffff;
+            text-transform: uppercase;
+        }
+        .subtitle {
+            color: var(--muted);
+            font-size: 0.88rem;
+            margin-bottom: 1.5rem;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+        .metric {
+            background: #080b11;
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--neon);
+            padding: 0.9rem 1rem;
+        }
+        .metric-label {
+            font-size: 0.72rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.35rem;
+        }
+        .metric-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text);
+            word-break: break-word;
+        }
+        .command-bar {
+            display: flex;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+        }
+        input {
+            flex: 1;
+            background: #06080d;
+            border: 1px solid var(--border);
+            color: var(--neon);
+            padding: 0.75rem 0.9rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        input:focus {
+            border-color: var(--neon);
+        }
+        button {
+            background: var(--neon);
+            color: #041014;
+            border: none;
+            padding: 0.75rem 1.3rem;
+            font-family: inherit;
+            font-weight: 800;
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #3bfce2;
+        }
+        .log-box {
+            background: #05070b;
+            border: 1px dashed var(--border);
+            padding: 0.9rem 1rem;
+            font-size: 0.82rem;
+            color: var(--amber);
+            min-height: 54px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="topbar">
+            <span>NODE // JAVA-25-JENKINS-RUNNER :3000</span>
+            <span class="status-pill">[● SYSTEM ONLINE]</span>
+        </div>
+
+        <div class="content">
+            <h1>Cyber Deployment Console</h1>
+            <div class="subtitle">Real-time JVM 25 telemetry &amp; Jenkins CI/CD verification target (Port 3000)</div>
+
+            <div class="grid" id="telemetryGrid">
+                <div class="metric">
+                    <div class="metric-label">Runtime</div>
+                    <div class="metric-value">Initializing...</div>
+                </div>
+            </div>
+
+            <div class="command-bar">
+                <input type="text" id="nodeInput" value="JENKINS-PROD-01" placeholder="ENTER TARGET NODE ID">
+                <button onclick="sendPing()">Execute Ping</button>
+            </div>
+
+            <div class="log-box" id="consoleLog">&gt; Awaiting operator command on port 3000...</div>
+        </div>
+    </div>
+
+    <script>
+        async function loadTelemetry() {
+            const res = await fetch('/api/telemetry');
+            const data = await res.json();
+            const items = [
+                { label: 'Java Runtime', value: `JDK ${data.javaVersion}` },
+                { label: 'JVM Engine', value: data.vmName },
+                { label: 'Host OS / Arch', value: data.osArch },
+                { label: 'CPU Threads', value: `${data.cpuCores} Cores` },
+                { label: 'Heap Memory', value: data.memoryUsage },
+                { label: 'Node Uptime', value: `${data.uptimeSeconds}s` }
+            ];
+            document.getElementById('telemetryGrid').innerHTML = items.map(item => `
+                <div class="metric">
+                    <div class="metric-label">${item.label}</div>
+                    <div class="metric-value">${item.value}</div>
+                </div>
+            `).join('');
+        }
+
+        async function sendPing() {
+            const node = encodeURIComponent(document.getElementById('nodeInput').value || 'DEFAULT-NODE');
+            const res = await fetch(`/api/ping?node=${node}`, { method: 'POST' });
+            const data = await res.json();
+            document.getElementById('consoleLog').innerHTML =
+                `&gt; [SEQ #${data.sequence}] TARGET=${data.node}<br>&gt; ${data.result} @ ${data.timestamp}`;
+            loadTelemetry();
+        }
+
+        loadTelemetry();
+    </script>
+</body>
+</html>
